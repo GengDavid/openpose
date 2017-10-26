@@ -28,10 +28,14 @@ namespace op
         }
     }
 
-    void CocoJsonSaver::record(const Array<float>& poseKeypoints, const std::string& imageName)
+    void CocoJsonSaver::record(const Array<float>& poseKeypoints, const Array<float>& poseScores,
+                               const std::string& imageName)
     {
         try
         {
+            // Security checks
+            if ((size_t)poseKeypoints.getSize(0) != poseScores.getVolume())
+                error("Dimension mismatch between poseKeypoints and poseScores.", __LINE__, __FUNCTION__, __FILE__);
             const auto numberPeople = poseKeypoints.getSize(0);
             const auto numberBodyParts = poseKeypoints.getSize(1);
             const auto imageId = getLastNumber(imageName);
@@ -80,6 +84,7 @@ namespace op
                     mJsonOfstream.plainText(poseKeypoints[finalIndex+1]);
                     mJsonOfstream.comma();
                     mJsonOfstream.plainText((poseKeypoints[finalIndex+2] > 0.f ? 1 : 0));
+                    // mJsonOfstream.plainText(poseKeypoints[finalIndex+2]); // For debugging
                     if (bodyPart < indexesInCocoOrder.size() - 1u)
                         mJsonOfstream.comma();
                 }
@@ -88,7 +93,7 @@ namespace op
 
                 // score
                 mJsonOfstream.key("score");
-                mJsonOfstream.plainText("0.0");
+                mJsonOfstream.plainText(poseScores[person]);
 
                 mJsonOfstream.objectClose();
             }
