@@ -22,6 +22,11 @@ See [doc/quick_start.md#quick-start](./quick_start.md#quick-start).
 
 
 
+## Kinect 2.0 as Webcam on Windows 10
+Since the Windows 10 Anniversary, Kinect 2.0 can be read as a normal webcam. All you need to do is go to `device manager`, expand the `kinect sensor devices` tab, right click and update driver of `WDF kinectSensor Interface`. If you already have another webcam, disconnect it or use `--camera 2`.
+
+
+
 ## JSON Output with No Visualization
 The following example runs the demo video `video.avi` and outputs JSON files in `output/`. Note: see [doc/output.md](./output.md) to understand the format of the JSON files.
 ```
@@ -116,8 +121,9 @@ We enumerate some of the most important flags, check the `Flags Detailed Descrip
 ## Flags Description
 Each flag is divided into flag name, default value, and description.
 
-1. Debugging
+1. Debugging/Other
 - DEFINE_int32(logging_level,             3,              "The logging level. Integer in the range [0, 255]. 0 will output any log() message, while 255 will not output any. Current OpenPose library messages are in the range 0-4: 1 for low priority messages and 4 for important ones.");
+- DEFINE_bool(disable_multi_thread,       false,          "It would slightly reduce the frame rate in order to highly reduce the lag. Mainly useful for 1) Cases where it is needed a low latency (e.g. webcam in real-time scenarios with low-range GPU devices); and 2) Debugging OpenPose when it is crashing to locate the error.");
 
 2. Producer
 - DEFINE_int32(camera,                    -1,             "The camera index for cv::VideoCapture. Integer in the range [0, 9]. Select a negative number (by default), to auto-detect and open the first available camera.");

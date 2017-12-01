@@ -31,10 +31,14 @@
 // See all the available parameter options withe the `--help` flag. E.g. `build/examples/openpose/openpose.bin --help`
 // Note: This command will show you flags for other unnecessary 3rdparty files. Check only the flags for the OpenPose
 // executable. E.g. for `openpose.bin`, look for `Flags from examples/openpose/openpose.cpp:`.
-// Debugging
+// Debugging/Other
 DEFINE_int32(logging_level,             3,              "The logging level. Integer in the range [0, 255]. 0 will output any log() message, while"
                                                         " 255 will not output any. Current OpenPose library messages are in the range 0-4: 1 for"
                                                         " low priority messages and 4 for important ones.");
+DEFINE_bool(disable_multi_thread,       false,          "It would slightly reduce the frame rate in order to highly reduce the lag. Mainly useful"
+                                                        " for 1) Cases where it is needed a low latency (e.g. webcam in real-time scenarios with"
+                                                        " low-range GPU devices); and 2) Debugging OpenPose when it is crashing to locate the"
+                                                        " error.");
 // Producer
 DEFINE_int32(camera,                    -1,             "The camera index for cv::VideoCapture. Integer in the range [0, 9]. Select a negative"
                                                         " number (by default), to auto-detect and open the first available camera.");
@@ -67,6 +71,7 @@ DEFINE_int32(keypoint_scale,            0,              "Scaling of the (x,y) co
                                                         " size (set with `net_resolution`), `2` to scale it to the final output size (set with"
                                                         " `resolution`), `3` to scale it in the range [0,1], and 4 for range [-1,1]. Non related"
                                                         " with `scale_number` and `scale_gap`.");
+DEFINE_bool(identification,             false,          "Whether to enable people identification across frames. Not available yet, coming soon.");
 // OpenPose Body Pose
 DEFINE_bool(body_disable,               false,          "Disable body keypoint detection. Option only possible for faster (but less accurate) face"
                                                         " keypoint detection.");
@@ -213,7 +218,8 @@ int openPoseDemo()
                                                   poseModel, !FLAGS_disable_blending, (float)FLAGS_alpha_pose,
                                                   (float)FLAGS_alpha_heatmap, FLAGS_part_to_show, FLAGS_model_folder,
                                                   heatMapTypes, op::ScaleMode::UnsignedChar,
-                                                  (float)FLAGS_render_threshold, enableGoogleLogging};
+                                                  (float)FLAGS_render_threshold, enableGoogleLogging,
+                                                  FLAGS_identification};
     // Face configuration (use op::WrapperStructFace{} to disable it)
     const op::WrapperStructFace wrapperStructFace{FLAGS_face, faceNetInputSize,
                                                   op::flagsToRenderMode(FLAGS_face_render, FLAGS_render_pose),
@@ -239,8 +245,9 @@ int openPoseDemo()
     // Configure wrapper
     opWrapper.configure(wrapperStructPose, wrapperStructFace, wrapperStructHand, wrapperStructInput,
                         wrapperStructOutput);
-    // Set to single-thread running (e.g. for debugging purposes)
-    // opWrapper.disableMultiThreading();
+    // Set to single-thread running (to debug and/or reduce latency)
+    if (FLAGS_disable_multi_thread)
+        opWrapper.disableMultiThreading();
 
     // Start processing
     // Two different ways of running the program on multithread environment
